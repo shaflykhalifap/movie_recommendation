@@ -114,52 +114,26 @@ Output:
 
 ## Evaluation
 
-Pendekatan yang digunakan dalam proyek ini adalah **Content-Based Filtering** yang merekomendasikan film berdasarkan kemiripan kontennya (genre, pemeran, kata kunci, dan deskripsi). Model ini tidak menggunakan data rating eksplisit dari pengguna, sehingga tidak melakukan prediksi rating secara langsung seperti pada pendekatan **Collaborative Filtering**. Oleh karena itu, metrik evaluasi seperti **Root Mean Square Error (RMSE)** atau **Mean Absolute Error (MAE)** tidak dapat digunakan secara langsung.
+Model yang dikembangkan menggunakan pendekatan **Content-Based Filtering**, yang memberikan rekomendasi berdasarkan kemiripan konten (genre, pemeran, kata kunci, dan deskripsi film). Karena model ini tidak menggunakan data eksplisit seperti rating pengguna, maka metrik evaluasi konvensional seperti **RMSE** atau **MAE** tidak relevan untuk digunakan.
 
-Sebagai gantinya, evaluasi sistem dilakukan dengan pendekatan berikut:
+Sebagai gantinya, digunakan metrik berbasis relevansi seperti:
 
-### 1. **Face Validity (Kelayakan Visual)**
+### 🎯 Precision@N
 
-Sistem diuji dengan memasukkan beberapa judul film populer, lalu diperiksa secara manual apakah film-film yang direkomendasikan memang memiliki kesamaan konteks dan genre. Misalnya:
+Precision@N mengukur proporsi dari N rekomendasi teratas yang relevan. Rekomendasi dianggap relevan jika memiliki setidaknya satu genre yang sama dengan genre film acuan.
 
-```python
-get_recommendations('The Dark Knight')
-```
+**Contoh:**
 
-**Hasil:**
-- Batman Begins
-- The Dark Knight Rises
-- Man of Steel  
-(dll)
+Misal pengguna memilih film `The Dark Knight` dengan genre: `Action`, `Crime`, `Drama`.
 
-Hasil rekomendasi tersebut **relevan dan masuk akal**, menunjukkan bahwa sistem mampu menangkap kemiripan tematik antar film superhero.
+Jika sistem merekomendasikan 10 film, dan 7 di antaranya memiliki minimal satu genre yang sama, maka:
 
-### 2. **Top-N Precision (Evaluasi Manual)**
-
-Dilakukan evaluasi kasar terhadap **10 film teratas** yang direkomendasikan untuk beberapa film. Jika dari 10 film yang direkomendasikan, 7 film dianggap relevan oleh penilai manusia, maka:
 
 $$ 
 \text{Precision@10} = \frac{7}{10} = 0.7 
 $$
 
-
-Evaluasi ini tentu bersifat subyektif dan terbatas, tetapi tetap memberi indikasi performa sistem secara praktis.
-
-### 3. **Alasan Tidak Digunakan Cosine Similarity Full Matrix**
-
-Awalnya sistem dirancang menggunakan **cosine similarity** antar vektor film. Namun, perhitungan matriks kesamaan penuh (n × n) menyebabkan konsumsi memori sangat tinggi, terutama di lingkungan Google Colab dengan keterbatasan RAM. Akibatnya, sistem gagal berjalan karena kehabisan memori.
-
-Sebagai alternatif, digunakan algoritma **K-Nearest Neighbors (KNN)** dari Scikit-learn dengan metrik `cosine`, yang menghitung kemiripan antar film hanya saat dibutuhkan (lazy evaluation). Pendekatan ini jauh lebih efisien secara memori dan memberikan hasil serupa.
-
-### 4. **Keterbatasan Evaluasi**
-
-Beberapa keterbatasan sistem evaluasi ini antara lain:
-- Tidak tersedia ground truth rating dari pengguna untuk evaluasi kuantitatif.
-- Tidak ada informasi eksplisit tentang preferensi pengguna individu.
-- Evaluasi bersifat manual dan subyektif.
-
----
-
+Bisa kita lihat pada kode, untuk sistem rekomendasi film "The Dark Knight" Mendapat 100% Precision, sedangkan "Toy Story"Mendapat 80% Precision
 ## Kesimpulan Evaluasi
 
 Meskipun tanpa metrik RMSE atau MAE, sistem Content-Based Filtering yang dibangun telah menunjukkan performa baik secara **kualitatif**. Rekomendasi yang dihasilkan akurat secara tematik dan logis, menunjukkan sistem mampu memahami konten dan konteks film dengan efektif.
