@@ -94,23 +94,36 @@ Sebagai alternatif, digunakan pendekatan K-Nearest Neighbors (KNN) menggunakan N
 
 3. **Top-N Recommendation:**
 
-   * Fungsi `get_recommendations(title, n)` mengembalikan N film teratas yang paling mirip dengan film yang dimasukkan.
+Fungsi utama yang digunakan untuk menghasilkan rekomendasi adalah `rekomendasi_film(title, n=10)`.
+Fungsi ini menggunakan model **K-Nearest Neighbors (KNN)** berdasarkan representasi konten (dari `CountVectorizer`) untuk mencari **N film yang paling mirip** dengan film input.
 
-### Alternatif Model
+Output dari fungsi ini mencakup:
 
-* Collaborative Filtering tidak diterapkan karena keterbatasan data eksplisit user-rating dan keterbatasan RAM.
+* **Judul film yang direkomendasikan**
+* **Genre masing-masing film**
 
-### Output Contoh
+Contoh penggunaan:
 
 ```python
-get_recommendations('The Dark Knight')
+rekomendasi_film('The Dark Knight')
 ```
 
-Output:
+Contoh hasil:
 
-* Batman Begins
-* The Dark Knight Rises
-* ...
+| No | Judul Film                                | Genre                          |
+| -- | ----------------------------------------- | ------------------------------ |
+| 1  | The Dark Knight Rises                     | Action, Crime, Drama, Thriller |
+| 2  | Batman: Under the Red Hood                | Action, Animation              |
+| 3  | Batman Returns                            | Action, Fantasy                |
+| 4  | Batman Forever                            | Action, Crime, Fantasy         |
+| 5  | Batman: The Dark Knight Returns, Part 1   | Action, Animation              |
+| 6  | Batman Begins                             | Action, Crime, Drama           |
+| 7  | Batman & Bill                             | Documentary                    |
+| 8  | Batman Unmasked: The Psychology of the... | Documentary                    |
+| 9  | Batman                                    | Fantasy, Action                |
+| 10 | Going Straight                            | Drama, Crime                   |
+
+---
 
 ## Evaluation
 
