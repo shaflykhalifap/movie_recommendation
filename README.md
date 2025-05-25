@@ -64,7 +64,7 @@ Selain itu untuk mengerti lebih dalam terkait data, saya melakukan visualisais u
    ID film dikonversi ke integer, dan data dengan ID tidak valid dihapus. Ini dilakukan untuk memastikan proses penggabungan antar dataset berjalan lancar.
 
 2. **Penggabungan Dataset:**
-   Dataset `credits` dan `keywords` digabungkan dengan `movies_metadata` berdasarkan kolom `id`.
+   Dataset `credits` dan `keywords` digabungkan dengan `movies_metadata` berdasarkan kolom `id` untuk membuat semua dataset yang penting dan digunakan menjadi satu
 
 3. **Ekstraksi Informasi Penting:**
 
