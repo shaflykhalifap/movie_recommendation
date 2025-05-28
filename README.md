@@ -31,20 +31,78 @@ Sistem ini penting, karena terkadang pengguna tidak tahu judul apa yang serupa d
 
 ## Data Understanding
 
-Dataset yang digunakan diambil dari Kaggle: [The Movies Dataset](https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset)
+Dataset yang digunakan diambil dari Kaggle: [The Movies Dataset](https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset).Dataset ini berisi file-file metadata untuk semua 45.000 film yang tercantum dalam Kumpulan Data MovieLens. Dataset ini terdiri dari film-film yang dirilis pada atau sebelum Juli 2017. Poin data meliputi pemeran, kru, kata kunci plot, anggaran, pendapatan, poster, tanggal rilis, bahasa, perusahaan produksi, negara, jumlah vote TMDB, dan rata-rata vote.
 
-Dataset terdiri dari beberapa file CSV, namun untuk proyek ini digunakan tiga file utama:
+Dataset ini juga memiliki file yang berisi 26 juta peringkat dari 270.000 pengguna untuk semua 45.000 film. Peringkat diberikan dalam skala 1-5 dan diperoleh dari situs web resmi GroupLens.
+
+Dataset sendiri terdiri dari beberapa file CSV, diantaranya :
+1. `movies_metadata.csv`
+Berisi informasi deskriptif (metadata) tentang film sebagai berikut :
+* Adult	               :  Apakah film ini untuk dewasa (True/False)
+* belongs_to_collection :	Nama koleksi/franchise (jika ada)
+* budget                :	Anggaran produksi film (dalam USD)
+* genres	               : Genre film (dalam format JSON string)
+* homepage              :	Situs resmi film
+* id                    :	ID unik untuk film
+* imdb_id               :	ID IMDb film
+* original_language     :	Bahasa asli film
+* original_title        :	Judul asli film
+* overview             :	Ringkasan cerita (deskripsi film)
+* popularity           :	Skor popularitas berdasarkan aktivitas pengguna
+* poster_path          :	Path gambar poster film
+* production_companies :	Daftar perusahaan produksi (JSON string)
+* production_countries :	Negara produksi (JSON string)
+* release_date         :	Tanggal rilis
+* revenue              :	Pendapatan film (USD)
+* runtime              :	Durasi film (menit)
+* spoken_languages     :	Bahasa yang digunakan dalam film
+* status               :	Status film (Released, Post Production, dll.)
+* tagline              :	Tagline atau slogan film
+* title                :	Judul film
+* video                :	Apakah film ini berupa video (True/False)
+* vote_average         :	Rata-rata skor rating pengguna
+* vote_count           :	Jumlah rating pengguna
+
+2. `ratings.csv`
+Berisi data rating pengguna terhadap film sebagai berikut :
+* userId                :	ID pengguna
+* movieId               :	ID film
+* rating                :	Nilai rating (skala 0.5–5.0)
+* timestamp             :	Waktu pemberian rating (format UNIX)
+
+3. `credits.csv`
+Berisi informasi aktor dan kru dalam film sebagai berikut :
+* id                    :	ID film (sama dengan movies_metadata)
+* cast                  :	Daftar aktor (format JSON string)
+* crew                  :	Daftar kru film (format JSON string)
+
+4. `keywords.csv`
+Berisi kata kunci relevan yang menggambarkan isi film sebagai berikut :
+* id                    :	ID film
+* keywords              :	Daftar keyword (format JSON string)
+
+5. `links.csv`
+Menghubungkan movieId dari file ratings.csv ke id di TMDB dan IMDb yang berisi sebagai berikut :
+* movieId               :	ID film dari ratings.csv
+*  imdbId                :	ID film versi IMDb
+*  tmdbId                :	ID film versi TMDB (movies_metadata.csv)
+
+Sebenarnya ada dua file .csv lain, yaitu links_small.csv dan ratings_small.csv, tetapi itu hanyalah versi kecil dari links dan ratings, atau versi dengan data yang lebih sedikit, sehingga dua dataset ini tidak akan kita gunakan.
+  
+Dari 5 file csv yang ada, kita hanya memakai 3 file karena kita memakai model Content-Based Filtering. 3 file tersebut yaitu :
 
 * `movies_metadata.csv`: berisi informasi umum tentang film
 * `credits.csv`: berisi informasi pemeran dan kru
 * `keywords.csv`: berisi kata kunci deskriptif film
 
 Jumlah data:
+Jumlah data tiap file csv berbeda beda, tetapi berikut hasilnya
+* Pada file `movies_metadata.csv` terdapat 45.466 jumlah data untuk film.
+* Pada file `credits.csv` terdapat 45.476 data pada ketiga kolom, termasuk jumlah film.
+* Pada file `keywords.csv` terdapat 46.419 data pada kedua kolom, termasuk jumlah film.
+* Kondisi data sendiri pada file `movies_metadata.csv` masih banyak missing value.
 
-* Jumlah total entri film: 45.000+ entri sebelum filtering
-* Jumlah film setelah pembersihan dan penggabungan: 46.497 entri
-
-Fitur-fitur penting:
+Fitur-fitur penting untuk pemodelan:
 
 * `id`: ID unik film
 * `title`: Judul film
@@ -54,26 +112,32 @@ Fitur-fitur penting:
 * `crew`: Daftar kru, termasuk sutradara
 * `keywords`: Kata kunci dari metadata film
 
-Selain itu untuk mengerti lebih dalam terkait data, saya melakukan visualisais untuk melihat genre terbanyak yang ada dalam dataset dengan menggunakan diagram batang horizontal, hasilnya genre drama adalah genre terbanyak.
+Selain itu untuk mengerti lebih dalam terkait data, saya melakukan visualisasi untuk melihat genre terbanyak yang ada dalam dataset dengan menggunakan diagram batang horizontal, hasilnya genre drama adalah genre terbanyak.
 
 ## Data Preparation
 
 ### Teknik dan Alasan Data Preparation
 
 1. **Konversi dan Filter ID:**
-   ID film dikonversi ke integer, dan data dengan ID tidak valid dihapus. Ini dilakukan untuk memastikan proses penggabungan antar dataset berjalan lancar.
+   ID film dikonversi ke integer, dan data dengan ID tidak valid dihapus. Selain itu, kita juga membersihkan data dari duplikasi yang ada, khususnya pada kolom `id`.Ini dilakukan untuk memastikan proses penggabungan antar dataset berjalan lancar.
 
 2. **Penggabungan Dataset:**
-   Dataset `credits` dan `keywords` digabungkan dengan `movies_metadata` berdasarkan kolom `id` untuk membuat semua dataset yang penting dan digunakan menjadi satu
+   Dataset `credits` dan `keywords` digabungkan dengan `movies_metadata` berdasarkan kolom `id` untuk membuat semua dataset yang penting dan digunakan menjadi satu.
 
 3. **Ekstraksi Informasi Penting:**
 
    * `genres`, `cast`, `crew`, dan `keywords` disimpan dalam bentuk list of strings.
    * Fungsi parsing digunakan untuk mengambil top 3 aktor dan hanya nama sutradara dari kolom `crew`.
+   * Ini dilakukan untuk memilih data data yang penting dan memastikan data agar bisa dilatih dalam model tanpa masalah.
 
-4. **Pembuatan Fitur Teks Gabungan:**
+4. **Pembersihan Missing Value:**
+   * Setelah penggabungan dan ekstraksi informasi penting, terdapat beberapa missing value pada dataset gabungan ini.
+   * Missing value pada kolom `overview` diisi dengan string kosong(''). Ini dilakukan karena `overview` sendiri adalah penjelasan terkait deskripsi film, lalu data yang missing lumayan banyak, +- 1000 data, sehingga data missing value diatasi dengan string kosong('')
+   * Missing value pada kolom `title` diatasi dengan drop missing value. Ini dilakukan karena `title` sendiri hanya memiliki sekitar 4 missing value, sehingga bisa di drop dan tidak akan mempengaruhi model.
 
-   * Semua fitur teks (overview, genres, cast, crew, keywords) digabungkan menjadi satu kolom `soup` yang akan digunakan untuk representasi vektor.
+5. **Pembuatan Fitur Teks Gabungan:**
+
+   * Semua fitur teks (overview, genres, cast, crew, keywords) digabungkan menjadi satu kolom `soup` yang akan digunakan untuk representasi vektor dengan mengubah list menjadi string dan dipisah spasi.
 
 ## Modeling
 
