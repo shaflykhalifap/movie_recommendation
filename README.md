@@ -31,7 +31,7 @@ Sistem ini penting, karena terkadang pengguna tidak tahu judul apa yang serupa d
 
 ## Data Understanding
 
-Dataset yang digunakan diambil dari Kaggle: [The Movies Dataset](https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset).Dataset ini berisi file-file metadata untuk semua 45.000 film yang tercantum dalam Kumpulan Data MovieLens. Dataset ini terdiri dari film-film yang dirilis pada atau sebelum Juli 2017. Poin data meliputi pemeran, kru, kata kunci plot, anggaran, pendapatan, poster, tanggal rilis, bahasa, perusahaan produksi, negara, jumlah vote TMDB, dan rata-rata vote.
+Dataset yang digunakan diambil dari Kaggle: [The Movies Dataset](https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset).Dataset ini berisi file-file metadata untuk semua 45.000 film yang tercantum dalam Dataset MovieLens. Dataset ini terdiri dari film-film yang dirilis pada atau sebelum Juli 2017. Poin data meliputi pemeran, kru, kata kunci plot, anggaran, pendapatan, poster, tanggal rilis, bahasa, perusahaan produksi, negara, jumlah vote TMDB, dan rata-rata vote.
 
 Dataset ini juga memiliki file yang berisi 26 juta peringkat dari 270.000 pengguna untuk semua 45.000 film. Peringkat diberikan dalam skala 1-5 dan diperoleh dari situs web resmi GroupLens.
 
@@ -95,12 +95,48 @@ Dari 5 file csv yang ada, kita hanya memakai 3 file karena kita memakai model Co
 * `credits.csv`: berisi informasi pemeran dan kru
 * `keywords.csv`: berisi kata kunci deskriptif film
 
-Jumlah data:
-Jumlah data tiap file csv berbeda beda, tetapi berikut hasilnya
-* Pada file `movies_metadata.csv` terdapat 45.466 jumlah data untuk film.
-* Pada file `credits.csv` terdapat 45.476 data pada ketiga kolom, termasuk jumlah film.
-* Pada file `keywords.csv` terdapat 46.419 data pada kedua kolom, termasuk jumlah film.
-* Kondisi data sendiri pada file `movies_metadata.csv` masih banyak missing value.
+Berikut jumlah data dan tipe data dari masing-masing file :
+
+**Pada file `movies_metadata.csv`** berikut rinciannya :
+  * adult                  : 45466 (Object) 
+  * belongs_to_collection  : 4494  (Object)
+  * budget                 : 45466 (Object)
+  * genres                 : 45466 (Object)
+  * homepage               : 7782  (Object)
+  * id                     : 45466 (Object) 
+  * imdb_id                : 45449 (Object)
+  * original_language      : 45455 (Object)
+  * original_title         : 45466 (Object)
+  * overview               : 44512 (Object)
+  * popularity             : 45461 (Object)
+  * poster_path            : 45080 (Object)
+  * production_companies   : 45463 (Object)
+  * production_countries   : 45463 (Object)
+  * release_date           : 45379 (Object)
+  * revenue                : 45460 (float64)
+  * runtime                : 45203 (float64)
+  * spoken_languages       : 45460 (Object)
+  * status                 : 45379 (Object)
+  * tagline                : 20412 (Object)
+  * title                  : 45460 (Object)
+  * video                  : 45460 (Object)
+  * vote_average           : 45460 (float64)
+  * vote_count             : 45460 (float64)
+
+Terlihat kondisi data pada file `movies_metadata.csv` masih banyak missing value, dan untuk tipe datanya berupa Object sebanyak 20 kolom dan float64 sebanyak 4 kolom.
+
+**Pada file `credits.csv`** berikut rinciannya:
+  * cast    : 45476 (Object)
+  * crew    : 45476 (Object)
+  * id      : 45476 (int64)
+
+Terlihat kondisi  data pada file `credits.csv` tidak ada missing value, dan untuk tipe daatanya berupa Object sebanyak 2 kolom dan int64 sebanyak 1 kolom.
+
+**Pada file `keywords.csv`** berikut  rinciannya:
+  * id        : 46419 (int64)
+  * keywords  : 46419 (Object)
+
+Terlihat kondisi data  pada file `keywords.csv` tidak ada missing value, dan untuk tipe datanya berupa Object sebanyak 1 kolom dan int64 sebanyak 1 kolom.
 
 Fitur-fitur penting untuk pemodelan:
 
@@ -118,24 +154,30 @@ Selain itu untuk mengerti lebih dalam terkait data, saya melakukan visualisasi u
 
 ### Teknik dan Alasan Data Preparation
 
-1. **Konversi dan Filter ID:**
-   ID film dikonversi ke integer, dan data dengan ID tidak valid dihapus. Selain itu, kita juga membersihkan data dari duplikasi yang ada, khususnya pada kolom `id`.Ini dilakukan untuk memastikan proses penggabungan antar dataset berjalan lancar.
+1. **Konversi dan Filter ID,serta Penanganan Duplikasi Data :**
+   ID film dikonversi ke integer, dan data dengan ID tidak valid dihapus. Selain itu, kita juga membersihkan data dari duplikasi yang ada, khususnya pada kolom `id` dengan metode
+   
+   ```python
+   drop_duplicates(subset='id')
+   ```
 
-2. **Penggabungan Dataset:**
+   Ini dilakukan untuk memastikan proses penggabungan antar dataset berjalan lancar.
+
+3. **Penggabungan Dataset:**
    Dataset `credits` dan `keywords` digabungkan dengan `movies_metadata` berdasarkan kolom `id` untuk membuat semua dataset yang penting dan digunakan menjadi satu.
 
-3. **Ekstraksi Informasi Penting:**
+4. **Ekstraksi Informasi Penting:**
 
    * `genres`, `cast`, `crew`, dan `keywords` disimpan dalam bentuk list of strings.
    * Fungsi parsing digunakan untuk mengambil top 3 aktor dan hanya nama sutradara dari kolom `crew`.
    * Ini dilakukan untuk memilih data data yang penting dan memastikan data agar bisa dilatih dalam model tanpa masalah.
 
-4. **Pembersihan Missing Value:**
+5. **Pembersihan Missing Value:**
    * Setelah penggabungan dan ekstraksi informasi penting, terdapat beberapa missing value pada dataset gabungan ini.
    * Missing value pada kolom `overview` diisi dengan string kosong(''). Ini dilakukan karena `overview` sendiri adalah penjelasan terkait deskripsi film, lalu data yang missing lumayan banyak, +- 1000 data, sehingga data missing value diatasi dengan string kosong('')
    * Missing value pada kolom `title` diatasi dengan drop missing value. Ini dilakukan karena `title` sendiri hanya memiliki sekitar 4 missing value, sehingga bisa di drop dan tidak akan mempengaruhi model.
 
-5. **Pembuatan Fitur Teks Gabungan:**
+6. **Pembuatan Fitur Teks Gabungan:**
 
    * Semua fitur teks (overview, genres, cast, crew, keywords) digabungkan menjadi satu kolom `soup` yang akan digunakan untuk representasi vektor dengan mengubah list menjadi string dan dipisah spasi.
 
