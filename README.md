@@ -187,7 +187,7 @@ Selain itu untuk mengerti lebih dalam terkait data, saya melakukan visualisasi u
 8. **Reset Index & Pembersihan Duplikasi Data:**
    * Reset  Index menggunakan .reset_index(), ini dtiujukan agar kita dapat mencari rekomendasi berdasarkan judul
    * Drop Duplicate menggunakan .drop_duplicates().Ini digunakan untuk memastikan tidak ada yg duplikat dan bisa mempengaruhi model dengan tidak baik, drop_duplicates ini digunakan untuk kolom `title` agar tidak ada duplikasi data.
-   * Proses ini dilakukaan saat tahap Modelling.
+   * Proses ini dilakukan saat tahap Modelling.
 
 ## Modeling
 
