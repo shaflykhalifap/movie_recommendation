@@ -277,7 +277,7 @@ $$
 \text{Precision@10} = \frac{7}{10} = 0.7 
 $$
 
-Bisa kita lihat pada kode, untuk sistem rekomendasi film "The Dark Knight" Mendapat 100% Precision, sedangkan "Toy Story"Mendapat 80% Precision
+Bisa kita lihat pada kode, untuk sistem rekomendasi film "The Dark Knight" Mendapat 100% Precision.
 ## Kesimpulan Evaluasi
 
 Meskipun tanpa metrik RMSE atau MAE, sistem Content-Based Filtering yang dibangun telah menunjukkan performa baik secara **kualitatif**. Rekomendasi yang dihasilkan akurat secara tematik dan logis, menunjukkan sistem mampu memahami konten dan konteks film dengan efektif.
