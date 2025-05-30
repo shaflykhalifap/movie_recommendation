@@ -163,14 +163,17 @@ Selain itu untuk mengerti lebih dalam terkait data, saya melakukan visualisasi u
 
    Ini dilakukan untuk memastikan proses penggabungan antar dataset berjalan lancar.
 
-3. **Penggabungan Dataset:**
+2. **Penggabungan Dataset:**
    Dataset `credits` dan `keywords` digabungkan dengan `movies_metadata` berdasarkan kolom `id` untuk membuat semua dataset yang penting dan digunakan menjadi satu.
 
-4. **Ekstraksi Informasi Penting:**
+3. **Ekstraksi Informasi Penting:**
 
    * `genres`, `cast`, `crew`, dan `keywords` disimpan dalam bentuk list of strings.
    * Fungsi parsing digunakan untuk mengambil top 3 aktor dan hanya nama sutradara dari kolom `crew`.
    * Ini dilakukan untuk memilih data data yang penting dan memastikan data agar bisa dilatih dalam model tanpa masalah.
+
+4. **Ubah Format JSON Ke List:**
+   * Membuat fungsi untuk mengubah format JSON menjadi List pada masing-masing kolom `genre`, `cast`,`crew`, `record`
 
 5. **Pembersihan Missing Value:**
    * Setelah penggabungan dan ekstraksi informasi penting, terdapat beberapa missing value pada dataset gabungan ini.
@@ -181,6 +184,11 @@ Selain itu untuk mengerti lebih dalam terkait data, saya melakukan visualisasi u
 
    * Semua fitur teks (overview, genres, cast, crew, keywords) digabungkan menjadi satu kolom `soup` yang akan digunakan untuk representasi vektor dengan mengubah list menjadi string dan dipisah spasi.
 
+8. **Reset Index & Pembersihan Duplikasi Data:**
+   * Reset  Index menggunakan .reset_index(), ini dtiujukan agar kita dapat mencari rekomendasi berdasarkan judul
+   * Drop Duplicate menggunakan .drop_duplicates().Ini digunakan untuk memastikan tidak ada yg duplikat dan bisa mempengaruhi model dengan tidak baik.
+   * Proses ini dilakukaan saat tahap Modelling.
+
 ## Modeling
 
 Pendekatan yang digunakan adalah **Content-Based Filtering**, dengan representasi teks menggunakan CountVectorizer.
@@ -190,6 +198,8 @@ Pendekatan yang digunakan adalah **Content-Based Filtering**, dengan representas
 1. **Vectorization:**
 
    * Menggunakan `CountVectorizer` untuk mengubah kolom `soup` menjadi matriks fitur (count\_matrix).
+   * Parameter yang digunakan adalah `stop_words='english'`, ini digunakan untuk menghapus kata kata umum dalam Bahasa Inggris yang tidak memberi informasi penting ( Stop Words)
+   * Parameter lain merupakan default parameter, seperti `lowercase = True` untuk konversi semua karakter menjadi huruf kecil sebelum Tokenizing, lalu  ada juga default parameter  `max_feature:None` artinya semua fitur digunakan, lalu `ngrame_range=(1,1)` yang artinya hanya unigram yang akan di ekstraksi.
 
 2. **Similarity Calculation:**
 
@@ -198,7 +208,22 @@ Pendekatan yang digunakan adalah **Content-Based Filtering**, dengan representas
   * Solusi Alternatif: K-Nearest Neighbors (KNN)
 Sebagai alternatif, digunakan pendekatan K-Nearest Neighbors (KNN) menggunakan NearestNeighbors dari Scikit-learn. Algoritma ini mencari n film terdekat terhadap film yang diminta berdasarkan jarak kosinus (cosine distance) tanpa membangun seluruh matriks kesamaan sekaligus, sehingga jauh lebih hemat memori.
 
-3. **Top-N Recommendation:**
+  * Paremeter model KNN yang digunakan adalah `metric ='cosine'` untuk menghitung jarak kosinus antar vektor, lalu `algorithm : 'brute'`ini digunakan untuk pencarian tetangga terdekat menggunakan brute-force.Lalu Parameter lainnya  adalah `n_neighbors=` (ditentukan saat pemanggilan fungsi), dan parameter default `n_jobs=None`Ini untuk jumlah core, default 'None' artinya hanya gunakan 1 core.
+
+3. **Fungsi Rekomendasi:**
+  ```python
+def rekomendasi_film(title, n=10):
+    idx = indices[title]
+    film_vector = count_matrix[idx]
+    distances, indices_knn = model_knn.kneighbors(film_vector, n_neighbors=n+1)
+
+    hasil = meta_filtered.iloc[indices_knn[0][1:]][['title', 'genres']]
+    return hasil.reset_index(drop=True)
+```
+
+- Fungsi `rekomendasi_film` akan mengembalikan **Top-N rekomendasi** film berdasarkan input judul.
+
+4. **Top-N Recommendation:**
 
 Fungsi utama yang digunakan untuk menghasilkan rekomendasi adalah `rekomendasi_film(title, n=10)`.
 Fungsi ini menggunakan model **K-Nearest Neighbors (KNN)** berdasarkan representasi konten (dari `CountVectorizer`) untuk mencari **N film yang paling mirip** dengan film input.
