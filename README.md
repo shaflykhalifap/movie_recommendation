@@ -184,10 +184,27 @@ Selain itu untuk mengerti lebih dalam terkait data, saya melakukan visualisasi u
 
    * Semua fitur teks (overview, genres, cast, crew, keywords) digabungkan menjadi satu kolom `soup` yang akan digunakan untuk representasi vektor dengan mengubah list menjadi string dan dipisah spasi.
 
+7. **Vectorization**
+
+   * Pada tahap ini, digunakan `CountVectorizer` dari library `scikit-learn` untuk mengubah kolom `soup` menjadi representasi numerik dalam bentuk matriks fitur (`count_matrix`). Proses ini umum digunakan dalam pemodelan teks, seperti sistem rekomendasi film yang sedang dikembangkan.
+
+   * Parameter yang digunakan:
+     - `stop_words='english'`: Menghapus kata-kata umum dalam Bahasa Inggris (stop words) seperti "the", "and", "is", yang tidak memberikan nilai informasi signifikan dalam analisis.
+     - `lowercase=True` *(default)*: Secara otomatis mengubah semua huruf dalam teks menjadi huruf kecil sebelum dilakukan tokenisasi.
+     - `max_features=None` *(default)*: Tidak ada batasan jumlah fitur (kata unik) yang digunakan, artinya semua kata unik akan dimasukkan dalam kosakata.
+     - `ngram_range=(1, 1)` *(default)*: Hanya menggunakan unigram (kata tunggal) sebagai fitur. Tidak mencakup bigram atau trigram.
+     - Parameter lainnya seperti `token_pattern`, `strip_accents`, `binary`, dan `min_df` juga menggunakan nilai default, yang secara umum cukup untuk kasus sederhana seperti ini.
+
+   * Output dari proses ini adalah sebuah sparse matrix (`count_matrix`) di mana:
+     - Setiap baris merepresentasikan satu dokumen (dalam konteks ini: satu film),
+     - Setiap kolom merepresentasikan satu kata unik dari seluruh korpus,
+     - Nilai dalam matriks menunjukkan jumlah kemunculan kata tersebut dalam dokumen terkait.
+
+   * Matrix hasil ini dapat digunakan untuk menghitung kemiripan antar dokumen dengan metode tertentu yang kemudian berguna untuk menghasilkan rekomendasi film.
+
 8. **Reset Index & Pembersihan Duplikasi Data:**
    * Reset  Index menggunakan .reset_index(), ini dtiujukan agar kita dapat mencari rekomendasi berdasarkan judul
    * Drop Duplicate menggunakan .drop_duplicates().Ini digunakan untuk memastikan tidak ada yg duplikat dan bisa mempengaruhi model dengan tidak baik, drop_duplicates ini digunakan untuk kolom `title` agar tidak ada duplikasi data.
-   * Proses ini dilakukan saat tahap Modelling.
 
 ## Modeling
 
@@ -195,22 +212,16 @@ Pendekatan yang digunakan adalah **Content-Based Filtering**, dengan representas
 
 ### Tahapan Model
 
-1. **Vectorization:**
-
-   * Menggunakan `CountVectorizer` untuk mengubah kolom `soup` menjadi matriks fitur (count\_matrix).
-   * Parameter yang digunakan adalah `stop_words='english'`, ini digunakan untuk menghapus kata kata umum dalam Bahasa Inggris yang tidak memberi informasi penting ( Stop Words)
-   * Parameter lain merupakan default parameter, seperti `lowercase = True` untuk konversi semua karakter menjadi huruf kecil sebelum Tokenizing, lalu  ada juga default parameter  `max_feature:None` artinya semua fitur digunakan, lalu `ngrame_range=(1,1)` yang artinya hanya unigram yang akan di ekstraksi.
-
-2. **Similarity Calculation:**
+1. **Similarity Calculation:**
 
    * Awalnya, pendekatan Cosine Similarity sempat direncanakan untuk mengukur kesamaan antar film berdasarkan representasi vektor tersebut. Namun, pendekatan ini memerlukan perhitungan matriks kesamaan berukuran besar (n x n), yang menyebabkan penggunaan memori sangat tinggi pada Google Colab dan berujung pada kegagalan eksekusi (RAM out of memory).
 
   * Solusi Alternatif: K-Nearest Neighbors (KNN)
 Sebagai alternatif, digunakan pendekatan K-Nearest Neighbors (KNN) menggunakan NearestNeighbors dari Scikit-learn. Algoritma ini mencari n film terdekat terhadap film yang diminta berdasarkan jarak kosinus (cosine distance) tanpa membangun seluruh matriks kesamaan sekaligus, sehingga jauh lebih hemat memori.
 
-  * Paremeter model KNN yang digunakan adalah `metric ='cosine'` untuk menghitung jarak kosinus antar vektor, lalu `algorithm : 'brute'`ini digunakan untuk pencarian tetangga terdekat menggunakan brute-force.Lalu Parameter lainnya  adalah `n_neighbors=` (ditentukan saat pemanggilan fungsi), dan parameter default `n_jobs=None`Ini untuk jumlah core, default 'None' artinya hanya gunakan 1 core.
+  * Parameter model KNN yang digunakan adalah `metric ='cosine'` untuk menghitung jarak kosinus antar vektor, lalu `algorithm : 'brute'`ini digunakan untuk pencarian tetangga terdekat menggunakan brute-force.Lalu Parameter lainnya  adalah `n_neighbors=` (ditentukan saat pemanggilan fungsi), dan parameter default `n_jobs=None`Ini untuk jumlah core, default 'None' artinya hanya gunakan 1 core.
 
-3. **Fungsi Rekomendasi:**
+2. **Fungsi Rekomendasi:**
   ```python
 def rekomendasi_film(title, n=10):
     idx = indices[title]
@@ -223,7 +234,7 @@ def rekomendasi_film(title, n=10):
 
 - Fungsi `rekomendasi_film` akan mengembalikan **Top-N rekomendasi** film berdasarkan input judul.
 
-4. **Top-N Recommendation:**
+3. **Top-N Recommendation:**
 
 Fungsi utama yang digunakan untuk menghasilkan rekomendasi adalah `rekomendasi_film(title, n=10)`.
 Fungsi ini menggunakan model **K-Nearest Neighbors (KNN)** berdasarkan representasi konten (dari `CountVectorizer`) untuk mencari **N film yang paling mirip** dengan film input.
